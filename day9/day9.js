@@ -2,55 +2,66 @@ const fs = require("fs");
 const array = fs.readFileSync("input.txt").toString().split("\n");
 
 let HCords = [0, 0];
-let TCords = [0, 0];
-let allTCords = [];
+let TCords = Array.from({ length: 9 }, () => [0, 0]);
+const set1 = new Set();
+const set2 = new Set();
 for (line in array) {
   let direction = array[line].split(" ")[0];
   let steps = array[line].split(" ")[1];
-  for (let i = 0; i < steps; i++) {
-    if (direction == "L") {
-      HCords[0]--;
-      if (distanceCalculate(HCords, TCords) == 2) TCords[0]--;
-      else if (distanceCalculate(HCords, TCords) > 2) {
-        TCords[0] = HCords[0] + 1;
-        TCords[1] = HCords[1];
-      }
-    }
-    if (direction == "R") {
-      HCords[0]++;
-      if (distanceCalculate(HCords, TCords) == 2) TCords[0]++;
-      else if (distanceCalculate(HCords, TCords) > 2) {
-        TCords[0] = HCords[0] - 1;
-        TCords[1] = HCords[1];
-      }
-    }
-    if (direction == "U") {
-      HCords[1]++;
-      if (distanceCalculate(HCords, TCords) == 2) TCords[1]++;
-      else if (distanceCalculate(HCords, TCords) > 2) {
-        TCords[0] = HCords[0];
-        TCords[1] = HCords[1] - 1;
-      }
-    }
-    if (direction == "D") {
-      HCords[1]--;
-      if (distanceCalculate(HCords, TCords) == 2) TCords[1]--;
-      else if (distanceCalculate(HCords, TCords) > 2) {
-        TCords[0] = HCords[0];
-        TCords[1] = HCords[1] + 1;
-      }
-    }
 
-    if (!allTCords.some((row) => row.toString() === TCords.toString()))
-      allTCords.push(JSON.parse(JSON.stringify(TCords)));
+  for (let i = 0; i < steps; i++) {
+    for (let item = 0; item < TCords.length; item++) {
+      if (direction == "L") {
+        if (item == 0) {
+          HCords[0]--;
+          TCords[item] = fixLocation(HCords, TCords[item]);
+        } else TCords[item] = fixLocation(TCords[item - 1], TCords[item]);
+      }
+      if (direction == "R") {
+        if (item == 0) {
+          HCords[0]++;
+          TCords[item] = fixLocation(HCords, TCords[item]);
+        } else TCords[item] = fixLocation(TCords[item - 1], TCords[item]);
+      }
+      if (direction == "U") {
+        if (item == 0) {
+          HCords[1]++;
+          TCords[item] = fixLocation(HCords, TCords[item]);
+        } else TCords[item] = fixLocation(TCords[item - 1], TCords[item]);
+      }
+      if (direction == "D") {
+        if (item == 0) {
+          HCords[1]--;
+          TCords[item] = fixLocation(HCords, TCords[item]);
+        } else TCords[item] = fixLocation(TCords[item - 1], TCords[item]);
+      }
+
+      set1.add(TCords[0].toString());
+      set2.add(TCords[8].toString());
+    }
   }
 }
 
-function distanceCalculate(HCords, TCords) {
-  let distance = Math.sqrt(
-    Math.pow(HCords[0] - TCords[0], 2) + Math.pow(HCords[1] - TCords[1], 2)
-  );
-  return distance;
-}
+console.log(set1.size);
+console.log(set2.size);
 
-console.log(allTCords.length);
+function fixLocation(HCords, TCords) {
+  horizontalDifference = Math.abs(HCords[0] - TCords[0]);
+  verticalDifference = Math.abs(HCords[1] - TCords[1]);
+
+  if (horizontalDifference >= 2 && verticalDifference >= 2) {
+    if (TCords[0] < HCords[0]) TCords[0] = HCords[0] - 1;
+    else TCords[0] = HCords[0] + 1;
+    if (TCords[1] < HCords[1]) TCords[1] = HCords[1] - 1;
+    else TCords[1] = HCords[1] + 1;
+  } else if (horizontalDifference >= 2) {
+    if (TCords[0] < HCords[0]) TCords[0] = HCords[0] - 1;
+    else TCords[0] = HCords[0] + 1;
+    TCords[1] = HCords[1];
+  } else if (verticalDifference >= 2) {
+    if (TCords[1] < HCords[1]) TCords[1] = HCords[1] - 1;
+    else TCords[1] = HCords[1] + 1;
+    TCords[0] = HCords[0];
+  }
+  return TCords;
+}
